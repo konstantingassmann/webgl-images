@@ -1,0 +1,44 @@
+<html>
+
+<head>
+	<title>Parcel Sandbox</title>
+	<meta charset="UTF-8" />
+	<style>
+	body {
+		margin: 0;
+		min-height: 100vh;
+	}
+	canvas {
+		position: fixed;
+		top: 0;
+		right: 0;
+		left: 0;
+		bottom: 0;
+	}
+	.wrapper {
+		display: flex;
+		align-items: center;
+		height: 100vh;
+		padding: 0 8px;
+	}
+	img {
+		width: 400px;
+		height: auto;
+		margin-left: 8px;
+		margin-right: 8px;
+	}
+	</style>
+</head>
+
+<body>
+	<div class="wrapper">
+		<img src="https://images.unsplash.com/photo-1593541961174-8aa493a5f660?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=934&h=1400&q=80" crossorigin="anonymous">
+		<img src="https://images.unsplash.com/photo-1593876212271-83c4a4188d5b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=934&h=1400&q=80" crossorigin="anonymous">
+		<img src="https://images.unsplash.com/photo-1594019063755-5cf288508420?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=934&h=1400&q=80" crossorigin="anonymous">
+	</div>
+	<canvas id="paper" width="400" height="400"></canavs>
+
+	<script src="src/index.ts"></script>
+</body>
+
+</html>

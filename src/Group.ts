@@ -1,0 +1,28 @@
+import Object3d, { TViewProps } from "./Object3d";
+import { Vec3 } from "./types";
+
+export default class Group extends Object3d {
+  private children: Array<Object3d> = [];
+
+  add(obj: Object3d) {
+    this.children.push(obj);
+  }
+
+  onclick(cb: (obj: Object3d) => void) {
+    for (let child of this.children) {
+      child.onclick(cb);
+    }
+  }
+
+  update(props: TViewProps, cursor: Vec3) {
+    for (let child of this.children) {
+      child.update(props, cursor);
+    }
+  }
+
+  draw(props: any) {
+    for (let child of this.children) {
+      child.draw(props);
+    }
+  }
+}
