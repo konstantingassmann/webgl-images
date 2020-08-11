@@ -9,6 +9,7 @@ import {
 import { Vec3, Vec2 } from "./types";
 import Group from "./Group";
 import Img from "./Image";
+import Scene from "./Scene";
 const reglLib = require("regl");
 
 const canvas = document.querySelector("#paper") as HTMLCanvasElement;
@@ -26,11 +27,11 @@ const camera = new Camera(gl, [0, 0, -50]);
 
 const regl = reglLib(gl);
 
-const world = new Group();
+const world = new Scene();
 
 let state: Array<{ id: string; open: boolean }> = [];
 const getIdx = (id: string) => {
-  return state.findIndex(s => s.id === id);
+  return state.findIndex((s) => s.id === id);
 };
 const fromState = (id: string) => {
   const idx = getIdx(id);
@@ -38,8 +39,8 @@ const fromState = (id: string) => {
 };
 
 Promise.all(
-  Array.from(document.querySelectorAll("img")).map(img => {
-    return new Promise<HTMLImageElement>(resolve => {
+  Array.from(document.querySelectorAll("img")).map((img) => {
+    return new Promise<HTMLImageElement>((resolve) => {
       if (!img.complete) {
         img.onload = () => {
           resolve(img);
@@ -50,14 +51,17 @@ Promise.all(
     });
   })
 ).then((imgs: Array<HTMLImageElement>) => {
-  imgs.forEach(img => {
+  imgs.forEach((img) => {
     const image = createWebglImg(img, camera, dpr, regl, true);
     image.setZoom(1.2);
-    image.on("hover", over => {
+    image.on("hover", (over) => {
       let open = fromState(image.id).open;
       if (!open) {
         image.setZoom(over ? 1.25 : 1.2);
       }
+    });
+    image.on("click", () => {
+      console.log("click");
     });
     state.push({ id: image.id, open: false });
     world.add(image);
@@ -67,7 +71,7 @@ Promise.all(
     size: [gl.canvas.width, gl.canvas.height, 1]
   });
 
-  world.onclick((obj: Img) => {
+  world.on("click", (obj: Img) => {
     let open = fromState(obj.id).open;
     const idx = getIdx(obj.id);
 
@@ -99,7 +103,7 @@ let cameraPosition: Vec3 = [0, 0, -50];
 let lastMouse = [0, 0];
 const velocity = smoothValue<Vec2>([0, 0], 0.1);
 
-window.addEventListener("mousedown", e => {
+world.on("mousedown", (e) => {
   dragging = true;
   mouse = toClipspace(
     [e.clientX, e.clientY],
@@ -108,7 +112,7 @@ window.addEventListener("mousedown", e => {
   lastMouse = mouse;
 });
 
-window.addEventListener("mousemove", e => {
+world.on("mousemove", (e) => {
   const projectedMouse = camera.unproject({
     position: [e.clientX * dpr, e.clientY * dpr, 0]
   }).position;
@@ -136,7 +140,7 @@ window.addEventListener("mousemove", e => {
   }
 });
 
-window.addEventListener("mouseup", () => {
+world.on("mouseup", () => {
   dragging = false;
 });
 

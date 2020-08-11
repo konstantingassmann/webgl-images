@@ -22,22 +22,6 @@ export default class Img extends Plane {
   constructor(props: TObject3dProps & TImg) {
     const planeProps = {
       ...props,
-      vert: `
-      precision mediump float;
-      attribute vec3 position;
-      attribute vec3 uv;
-  
-      uniform mat4 projection;
-      uniform mat4 view;
-      uniform mat4 modelViewMatrix;
-
-      varying vec2 vUv;
-  
-      void main () {
-        gl_Position = projection * view * modelViewMatrix * vec4(position, 1);
-        vUv = vec2(uv.x, uv.y);
-      }
-    `,
       frag: `
       precision mediump float;
 
@@ -60,38 +44,7 @@ export default class Img extends Plane {
         aspectUv = aspectUv * scale(vec2(zoom));
         aspectUv += vec2(0.5);
         vec4 img = texture2D(image, aspectUv);
-
-        const float PI = 6.28318530718;
-        const float Directions = 16.0; // BLUR DIRECTIONS (Default 16.0 - More is better but slower)
-    const float Quality = 4.0; // BLUR QUALITY (Default 4.0 - More is better but slower)
-    const float Size = 8.0;
-    vec2 Radius = Size/resolution.xy;
-
-    const float COMP = 6.28318530718 / 16.0;
-    
-    // Normalized pixel coordinates (from 0 to 1)
-    vec2 uv = gl_FragCoord.xy/resolution.xy;
-    // Pixel colour
-    vec4 Color = texture2D(image, aspectUv);
-
-    for( float d=0.0; d<PI; d+=COMP)
-    {
-		for(float i=1.0/Quality; i<=1.0; i+=1.0/Quality)
-        {
-			Color += texture2D( image, aspectUv + vec2(cos(d),sin(d))*Radius*i);		
-        }
-    }
-    
-    // Output to screen
-    Color /= Quality * Directions - 15.0;
-
-    float left = step(0., aspectUv.x);   // Similar to ( X greater than 0.1 )
-    float bottom = step(0.2, aspectUv.y); // Similar to ( Y greater than 0.1 )
-
-    // The multiplication of left*bottom will be similar to the logical AND.
-    vec4 color = vec4(1. - vec3( left * bottom ), 1.);
-
-        gl_FragColor = Color * color + img * (1. - color);
+        gl_FragColor = img;
       }
     `,
       uniforms: {

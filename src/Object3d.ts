@@ -38,10 +38,10 @@ export default class Object3d {
 
   protected dimensions: Vec2 = [1, 1];
 
-  protected mouseover = false;
+  public mouseover = false;
   protected updateFunctions: Array<() => void> = [];
 
-  protected events: { [key: string]: (value: any) => void } = {};
+  protected events: { [key: string]: (value?: any) => void } = {};
 
   public id: string;
 
@@ -166,7 +166,7 @@ export default class Object3d {
     return this.dimensions;
   }
 
-  dispatch(name: string, value: any) {
+  dispatch(name: string, value?: any) {
     if (typeof this.events[name] === "function") {
       this.events[name](value);
     }
@@ -174,15 +174,6 @@ export default class Object3d {
 
   on(event: string, cb: (value: any) => void) {
     this.events[event] = cb;
-  }
-
-  onclick(cb: (obj: Object3d) => void) {
-    window.addEventListener("click", () => {
-      if (this.mouseover && cb) {
-        const boundCB = cb.bind(this);
-        boundCB(this);
-      }
-    });
   }
 
   update(props: TViewProps, cursor: Vec3) {
@@ -203,7 +194,7 @@ export default class Object3d {
       }
     }
 
-    this.updateFunctions.forEach(f => f());
+    this.updateFunctions.forEach((f) => f());
   }
 
   draw(props: TViewProps) {

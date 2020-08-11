@@ -21,16 +21,20 @@ export default class Plane extends Object3d {
       vert:
         props.vert ||
         `
-      attribute vec3 position;
-      attribute vec3 uv;
-  
-      uniform mat4 projection;
-      uniform mat4 view;
-      uniform mat4 modelViewMatrix;
-  
-      void main () {
-        gl_Position = projection * view * modelViewMatrix * vec4(position, 1);
-      }
+        precision mediump float;
+        attribute vec3 position;
+        attribute vec3 uv;
+    
+        uniform mat4 projection;
+        uniform mat4 view;
+        uniform mat4 modelViewMatrix;
+
+        varying vec2 vUv;
+    
+        void main () {
+          gl_Position = projection * view * modelViewMatrix * vec4(position, 1);
+          vUv = vec2(uv.x, uv.y);
+        }
     `,
       frag:
         props.frag ||
