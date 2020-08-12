@@ -1,13 +1,6 @@
 import Camera from "./cam";
-import {
-  lerp3,
-  toClipspace,
-  createWebglImg,
-  lerp2,
-  smoothValue
-} from "./utils";
+import { lerp3, toClipspace, createWebglImg, smoothValue } from "./utils";
 import { Vec3, Vec2 } from "./types";
-import Group from "./Group";
 import Img from "./Image";
 import Scene from "./Scene";
 const reglLib = require("regl");
@@ -30,6 +23,7 @@ const regl = reglLib(gl);
 const world = new Scene();
 
 let state: Array<{ id: string; open: boolean }> = [];
+
 const getIdx = (id: string) => {
   return state.findIndex((s) => s.id === id);
 };

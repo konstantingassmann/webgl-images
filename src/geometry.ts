@@ -1,4 +1,4 @@
-type TPlane = {
+export type TPlane = {
   x: number;
   y: number;
   z: number;
