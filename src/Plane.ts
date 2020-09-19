@@ -10,7 +10,7 @@ export default class Plane extends Object3d {
       y: this.position[1],
       z: this.position[2],
       width: this.dimensions[0],
-      height: this.dimensions[1]
+      height: this.dimensions[1],
     });
 
     this.setSize(props.scale || [1, 1, 1]);
@@ -40,20 +40,20 @@ export default class Plane extends Object3d {
         props.frag ||
         `
       void main () {
-        gl_FragColor = vec4(1, 0, 0, 1);
+        gl_FragColor = vec4(1, 1, 1, 1);
       }
     `,
       attributes: {
         position: props.regl.buffer(pos),
-        uv: props.regl.buffer(uv)
+        uv: props.regl.buffer(uv),
       },
       uniforms: {
         projection: props.regl.prop("projection"),
         view: props.regl.prop("view"),
         modelViewMatrix: props.regl.prop("modelViewMatrix"),
-        ...(props.uniforms || {})
+        ...(props.uniforms || {}),
       },
-      count: pos.length / 3
+      count: pos.length / 3,
     });
   }
 }

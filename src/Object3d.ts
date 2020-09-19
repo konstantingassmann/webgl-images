@@ -2,6 +2,7 @@ import { mat4, vec3 } from "gl-matrix";
 import { Vec3, Vec2 } from "./types";
 import { lerp3 } from "./utils";
 import { v4 as uuidv4 } from "uuid";
+const lerp = require("lerp");
 
 export type TViewProps = {
   projection: mat4;
@@ -38,6 +39,9 @@ export default class Object3d {
 
   protected dimensions: Vec2 = [1, 1];
 
+  protected opacity = 1;
+  protected targetOpacity = 1;
+
   public mouseover = false;
   protected updateFunctions: Array<() => void> = [];
 
@@ -52,6 +56,7 @@ export default class Object3d {
       this.updateFunctions.push(this.lerpUpdate.bind(this));
       this.transform = this.transformLerp;
     } else {
+      this.updateFunctions.push(this.updateDefault.bind(this));
       this.transform = this.transformDefault;
     }
 
@@ -62,7 +67,13 @@ export default class Object3d {
 
   transform(props: TTransform) {}
 
+  updateDefault() {
+    this.opacity = this.targetOpacity;
+    this.position = this.targetPosition;
+  }
+
   lerpUpdate() {
+    this.opacity = lerp(this.opacity, this.targetOpacity, 0.1);
     this.position = lerp3(this.position, this.targetPosition, 0.1);
     this.size = lerp3(this.size, this.targetSize, 0.1);
 
@@ -70,14 +81,24 @@ export default class Object3d {
 
     this.translate(this.position);
 
-    if (this.origin === "center" && this.position) {
-      this.translate([this.dimensions[0] * 0.5, this.dimensions[1] * 0.5, 0]);
+    const fromCenter = this.origin === "center";
+
+    if (fromCenter) {
+      this.translate([
+        this.dimensions[0] * 0.5,
+        this.dimensions[1] * 0.5,
+        this.position[2],
+      ]);
     }
 
     this.scale(this.size);
 
-    if (this.origin === "center" && this.position) {
-      this.translate([this.dimensions[0] * -0.5, this.dimensions[1] * -0.5, 0]);
+    if (fromCenter) {
+      this.translate([
+        this.dimensions[0] * -0.5,
+        this.dimensions[1] * -0.5,
+        this.position[2],
+      ]);
     }
   }
 
@@ -150,8 +171,16 @@ export default class Object3d {
   }
 
   setPosition(position: Vec3) {
-    this.position = position;
     this.targetPosition = position;
+    this.position = position;
+  }
+
+  setOpacity(opacity: number) {
+    this.targetOpacity = opacity;
+  }
+
+  getOpacity(value: number) {
+    return this.opacity;
   }
 
   getPosition() {
@@ -200,7 +229,7 @@ export default class Object3d {
   draw(props: TViewProps) {
     this.drawFunc({
       ...props,
-      modelViewMatrix: this.modelViewMatrix
+      modelViewMatrix: this.modelViewMatrix,
     });
   }
 }

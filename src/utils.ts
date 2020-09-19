@@ -8,7 +8,7 @@ export const lerp3 = (from: Vec3, to: Vec3, time: number): Vec3 => {
   return [
     lerp(from[0], to[0], time),
     lerp(from[1], to[1], time),
-    lerp(from[2], to[2], time)
+    lerp(from[2], to[2], time),
   ];
 };
 
@@ -32,7 +32,7 @@ export const createWebglImg = (
 
   const { position, size } = camera.unproject({
     position: [bbox.x * dpr, bbox.y * dpr, 0],
-    size: [bbox.width * dpr, bbox.height * dpr, 1]
+    size: [bbox.width * dpr, bbox.height * dpr, 1],
   });
 
   const image = new Img({
@@ -40,7 +40,7 @@ export const createWebglImg = (
     position,
     dimensions: [size[0], size[1]],
     src: img,
-    lerps
+    lerps,
   });
 
   return image;
@@ -79,10 +79,9 @@ export const smoothValue = <T extends Tsmooth>(
     },
     set value(v: T) {
       this.target = v;
-      this.update();
     },
     update() {
       this.current = lerpFunc(this.current, this.target, time);
-    }
+    },
   };
 };

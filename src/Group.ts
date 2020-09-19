@@ -4,6 +4,10 @@ import { Vec3 } from "./types";
 export default class Group extends Object3d {
   protected children: Array<Object3d> = [];
 
+  getChildren() {
+    return this.children;
+  }
+
   add(obj: Object3d) {
     this.children.push(obj);
   }

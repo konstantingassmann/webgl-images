@@ -19,6 +19,11 @@ const gl = canvas.getContext("webgl") as WebGLRenderingContext;
 const camera = new Camera(gl, [0, 0, -50]);
 
 const regl = reglLib(gl);
+gl.enable(gl.CULL_FACE);
+gl.cullFace(gl.FRONT);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+gl.enable(gl.BLEND);
+gl.disable(gl.DEPTH_TEST);
 
 const world = new Scene();
 
@@ -27,6 +32,7 @@ let state: Array<{ id: string; open: boolean }> = [];
 const getIdx = (id: string) => {
   return state.findIndex((s) => s.id === id);
 };
+
 const fromState = (id: string) => {
   const idx = getIdx(id);
   return state[idx];
@@ -54,36 +60,42 @@ Promise.all(
         image.setZoom(over ? 1.25 : 1.2);
       }
     });
-    image.on("click", () => {
-      console.log("click");
-    });
     state.push({ id: image.id, open: false });
     world.add(image);
   });
 
   const { size } = camera.unproject({
-    size: [gl.canvas.width, gl.canvas.height, 1]
+    size: [gl.canvas.width, gl.canvas.height, 1],
   });
 
   world.on("click", (obj: Img) => {
     let open = fromState(obj.id).open;
     const idx = getIdx(obj.id);
 
+    const newPos: Vec3 = [...obj.getPosition()];
+
     if (open) {
       obj.setZoom(1.2);
       obj.transform({
         scale: [1, 1, 1],
-        origin: "center"
+        origin: "center",
+        position: newPos,
       });
       open = false;
+      world.getChildren().forEach((child) => child.setOpacity(1));
     } else {
       const dims = obj.getDimensions();
       obj.setZoom(1);
       obj.transform({
         scale: [size[1] / dims[1], size[1] / dims[1], 1],
-        origin: "center"
+        origin: "center",
+        position: newPos,
       });
       open = true;
+      world
+        .getChildren()
+        .filter((child) => child.id !== obj.id)
+        .forEach((child) => child.setOpacity(0));
     }
     state[idx].open = open;
   });
@@ -108,13 +120,13 @@ world.on("mousedown", (e) => {
 
 world.on("mousemove", (e) => {
   const projectedMouse = camera.unproject({
-    position: [e.clientX * dpr, e.clientY * dpr, 0]
+    position: [e.clientX * dpr, e.clientY * dpr, 0],
   }).position;
 
   cursor = [
     projectedMouse[0] + cameraPosition[0],
     projectedMouse[1] + cameraPosition[1],
-    projectedMouse[2]
+    projectedMouse[2],
   ];
 
   if (dragging) {
@@ -126,7 +138,7 @@ world.on("mousemove", (e) => {
     dragOffset = [
       dragOffset[0] - (m[0] - mouse[0]) * 20,
       dragOffset[1] - (m[1] - mouse[1]) * 20,
-      -50
+      -50,
     ];
 
     lastMouse = mouse;
@@ -141,6 +153,7 @@ world.on("mouseup", () => {
 regl.frame(({ time }: { time: number }) => {
   cameraPosition = lerp3(cameraPosition, dragOffset, 0.1);
   velocity.value = [lastMouse[0] - mouse[0], lastMouse[1] - mouse[1]];
+  velocity.update();
 
   camera.setPosition(cameraPosition);
   camera.lookAt([cameraPosition[0], cameraPosition[1], 0]);
@@ -152,7 +165,7 @@ regl.frame(({ time }: { time: number }) => {
 
   regl.clear({
     color: [0, 0, 0, 0],
-    depth: 1
+    depth: 1,
   });
 
   world.draw({ projection, view, time, velocity: velocity.value });

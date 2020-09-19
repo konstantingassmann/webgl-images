@@ -29,6 +29,7 @@ export default class Img extends Plane {
       uniform float aspect;
       uniform float time;
       uniform float zoom;
+      uniform float opacity;
       uniform vec2 velocity;
       uniform vec2 resolution;
       
@@ -44,7 +45,7 @@ export default class Img extends Plane {
         aspectUv = aspectUv * scale(vec2(zoom));
         aspectUv += vec2(0.5);
         vec4 img = texture2D(image, aspectUv);
-        gl_FragColor = img;
+        gl_FragColor = vec4(img.rgb, opacity);
       }
     `,
       uniforms: {
@@ -53,8 +54,9 @@ export default class Img extends Plane {
         time: props.regl.prop("time"),
         zoom: props.regl.prop("zoom"),
         velocity: props.regl.prop("velocity"),
-        resolution: props.regl.prop("resolution")
-      }
+        resolution: props.regl.prop("resolution"),
+        opacity: props.regl.prop("opacity"),
+      },
     };
 
     super(planeProps);
@@ -68,6 +70,7 @@ export default class Img extends Plane {
 
     this.updateFunctions.push(() => {
       this.zoom.value = this.zoomTarget;
+      this.zoom.update();
     });
   }
 
@@ -87,7 +90,8 @@ export default class Img extends Plane {
       aspect: this.aspect,
       zoom: this.zoom.value,
       velocity: props.velocity,
-      resolution: this.resolution
+      resolution: this.resolution,
+      opacity: this.opacity,
     });
   }
 }
