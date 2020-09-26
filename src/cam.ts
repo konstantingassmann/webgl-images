@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix";
-import { Vec3, Vec2 } from "./types";
+import { Vec3 } from "./types";
 
 export default class Camera {
   private gl: WebGLRenderingContext;
@@ -32,7 +32,7 @@ export default class Camera {
 
   unproject({
     position,
-    size
+    size,
   }: {
     position?: Vec3;
     size?: Vec3;
@@ -46,7 +46,7 @@ export default class Camera {
       scale = [
         (size[0] * viewSize[0]) / this.gl.canvas.width,
         (size[1] * viewSize[1]) / this.gl.canvas.height,
-        size[2]
+        size[2],
       ];
     }
 
@@ -59,7 +59,7 @@ export default class Camera {
 
     return {
       position: pos,
-      size: scale
+      size: scale,
     };
   }
 

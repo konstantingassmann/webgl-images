@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.html",
+  "license": "MIT",
   "scripts": {
     "start": "parcel index.html --open",
     "build": "parcel build index.html"
   },
   "dependencies": {
+    "@types/animejs": "^3.1.2",
     "@types/node": "14.0.5",
+    "animejs": "^3.2.0",
     "eases": "1.0.8",
     "gl-matrix": "3.3.0",
     "lerp": "1.0.3",

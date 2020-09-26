@@ -1,7 +1,6 @@
 import Plane from "./Plane";
 import { TViewProps, TObject3dProps } from "./Object3d";
 import { Vec2 } from "./types";
-import { smoothValue, TSmoothValue } from "./utils";
 
 type TImg = {
   src: HTMLImageElement;
@@ -15,8 +14,7 @@ export default class Img extends Plane {
   private img: any;
   private aspect: number;
 
-  private zoom: TSmoothValue<number>;
-  private zoomTarget: number;
+  private zoom: number;
   private resolution: Vec2;
 
   constructor(props: TObject3dProps & TImg) {
@@ -64,22 +62,16 @@ export default class Img extends Plane {
     this.img = props.regl.texture(props.src);
 
     this.aspect = 1;
-    this.zoom = smoothValue(1, 0.1);
-    this.zoomTarget = 1;
+    this.zoom = 1;
     this.resolution = [props.src.width, props.src.height];
-
-    this.updateFunctions.push(() => {
-      this.zoom.value = this.zoomTarget;
-      this.zoom.update();
-    });
   }
 
   setZoom(z: number) {
-    this.zoomTarget = z;
+    this.zoom = z;
   }
 
   getZoom() {
-    return this.zoomTarget;
+    return this.zoom;
   }
 
   draw(props: TViewProps & TImageDrawProps) {
@@ -88,7 +80,7 @@ export default class Img extends Plane {
       modelViewMatrix: this.modelViewMatrix,
       image: this.img,
       aspect: this.aspect,
-      zoom: this.zoom.value,
+      zoom: this.zoom,
       velocity: props.velocity,
       resolution: this.resolution,
       opacity: this.opacity,

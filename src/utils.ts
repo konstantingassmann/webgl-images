@@ -24,8 +24,7 @@ export const createWebglImg = (
   img: HTMLImageElement,
   camera: Camera,
   dpr: number,
-  regl: any,
-  lerps?: boolean
+  regl: any
 ) => {
   img.style.opacity = "0";
   const bbox = img.getBoundingClientRect();
@@ -40,7 +39,6 @@ export const createWebglImg = (
     position,
     dimensions: [size[0], size[1]],
     src: img,
-    lerps,
   });
 
   return image;

@@ -4,6 +4,7 @@ import { Vec3, Vec2 } from "./types";
 import Img from "./Image";
 import Scene from "./Scene";
 const reglLib = require("regl");
+import anime from "animejs/lib/anime.es.js";
 
 const canvas = document.querySelector("#paper") as HTMLCanvasElement;
 const dpr = window.devicePixelRatio;
@@ -52,16 +53,33 @@ Promise.all(
   })
 ).then((imgs: Array<HTMLImageElement>) => {
   imgs.forEach((img) => {
-    const image = createWebglImg(img, camera, dpr, regl, true);
-    image.setZoom(1.2);
-    image.on("hover", (over) => {
+    const image = createWebglImg(img, camera, dpr, regl);
+
+    const onhover = (over: boolean) => {
       let open = fromState(image.id).open;
-      if (!open) {
-        image.setZoom(over ? 1.25 : 1.2);
+
+      if (open) {
+        return;
       }
-    });
+
+      const aprops = {
+        zoom: image.getZoom(),
+      };
+
+      anime({
+        targets: aprops,
+        zoom: over ? 1.25 : 1.2,
+        easing: "easeOutQuad",
+        duration: 500,
+        update: function () {
+          image.setZoom(aprops.zoom);
+        },
+      });
+    };
+    image.on("hover", onhover);
     state.push({ id: image.id, open: false });
     world.add(image);
+    onhover(false);
   });
 
   const { size } = camera.unproject({
@@ -69,33 +87,99 @@ Promise.all(
   });
 
   world.on("click", (obj: Img) => {
-    let open = fromState(obj.id).open;
+    const openImage = state.some((element) => element.open);
+
+    let open = fromState(obj.id).open || openImage;
+
+    if (openImage) {
+      const openEl = state.find((element) => element.open);
+      if (openEl) {
+        obj = world
+          .getChildren()
+          .find((child) => child.id === openEl.id) as Img;
+      }
+    }
+
     const idx = getIdx(obj.id);
 
     const newPos: Vec3 = [...obj.getPosition()];
 
+    const objSize = obj.getSize();
+
+    const childs = world.getChildren().filter((child) => child.id !== obj.id);
+
+    const tlprops = {
+      zoom: obj.getZoom(),
+      opacity: 1,
+      scaleX: objSize[0],
+      scaleY: objSize[1],
+      scaleZ: objSize[2],
+    };
+
+    const tl = anime.timeline();
+
     if (open) {
-      obj.setZoom(1.2);
-      obj.transform({
-        scale: [1, 1, 1],
-        origin: "center",
-        position: newPos,
+      tlprops.opacity = 0;
+      tl.add({
+        targets: tlprops,
+        zoom: 1.2,
+        scaleX: 1,
+        scaleY: 1,
+        scaleZ: 1,
+        easing: "easeOutQuad",
+        duration: 300,
+        update: () => {
+          obj.setZoom(tlprops.zoom);
+          obj.transform({
+            scale: [tlprops.scaleX, tlprops.scaleY, tlprops.scaleZ],
+            origin: "center",
+            position: newPos,
+          });
+        },
+      }).add({
+        targets: tlprops,
+        opacity: 1,
+        easing: "easeOutQuad",
+        duration: 300,
+        update: () => {
+          childs.forEach((child) => child.setOpacity(tlprops.opacity));
+        },
       });
+
       open = false;
-      world.getChildren().forEach((child) => child.setOpacity(1));
     } else {
       const dims = obj.getDimensions();
-      obj.setZoom(1);
-      obj.transform({
-        scale: [size[1] / dims[1], size[1] / dims[1], 1],
-        origin: "center",
-        position: newPos,
-      });
+
+      tl.add({
+        targets: tlprops,
+        opacity: 0,
+        easing: "easeOutQuad",
+        duration: 300,
+        update: () => {
+          childs.forEach((child) => child.setOpacity(tlprops.opacity));
+        },
+      }).add(
+        {
+          targets: tlprops,
+          zoom: 1,
+          scaleX: size[1] / dims[1],
+          scaleY: size[1] / dims[1],
+          scaleZ: 1,
+          easing: "easeOutQuad",
+          duration: 300,
+          update: () => {
+            obj.setZoom(tlprops.zoom);
+            obj.transform({
+              scale: [tlprops.scaleX, tlprops.scaleY, tlprops.scaleZ],
+              origin: "center",
+              position: newPos,
+            });
+          },
+        },
+        "-=100"
+      );
+
       open = true;
-      world
-        .getChildren()
-        .filter((child) => child.id !== obj.id)
-        .forEach((child) => child.setOpacity(0));
     }
     state[idx].open = open;
   });

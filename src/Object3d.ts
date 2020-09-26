@@ -1,8 +1,6 @@
 import { mat4, vec3 } from "gl-matrix";
 import { Vec3, Vec2 } from "./types";
-import { lerp3 } from "./utils";
 import { v4 as uuidv4 } from "uuid";
-const lerp = require("lerp");
 
 export type TViewProps = {
   projection: mat4;
@@ -16,7 +14,6 @@ export type TObject3dProps = {
   scale?: Vec3;
   frag?: string;
   vert?: string;
-  lerps?: boolean;
   uniforms?: any;
   dimensions?: Vec2;
 };
@@ -32,15 +29,12 @@ export default class Object3d {
   protected origin: string | undefined;
 
   protected position: Vec3 = [0, 0, 0];
-  protected targetPosition: Vec3 = [0, 0, 0];
 
   protected size: Vec3 = [1, 1, 1];
-  protected targetSize: Vec3 = [1, 1, 1];
 
   protected dimensions: Vec2 = [1, 1];
 
   protected opacity = 1;
-  protected targetOpacity = 1;
 
   public mouseover = false;
   protected updateFunctions: Array<() => void> = [];
@@ -52,53 +46,8 @@ export default class Object3d {
   constructor(props?: TObject3dProps) {
     this.id = uuidv4();
 
-    if (props && props.lerps) {
-      this.updateFunctions.push(this.lerpUpdate.bind(this));
-      this.transform = this.transformLerp;
-    } else {
-      this.updateFunctions.push(this.updateDefault.bind(this));
-      this.transform = this.transformDefault;
-    }
-
     if (props && props.dimensions) {
       this.dimensions = props.dimensions;
-    }
-  }
-
-  transform(props: TTransform) {}
-
-  updateDefault() {
-    this.opacity = this.targetOpacity;
-    this.position = this.targetPosition;
-  }
-
-  lerpUpdate() {
-    this.opacity = lerp(this.opacity, this.targetOpacity, 0.1);
-    this.position = lerp3(this.position, this.targetPosition, 0.1);
-    this.size = lerp3(this.size, this.targetSize, 0.1);
-
-    this.modelViewMatrix = mat4.create();
-
-    this.translate(this.position);
-
-    const fromCenter = this.origin === "center";
-
-    if (fromCenter) {
-      this.translate([
-        this.dimensions[0] * 0.5,
-        this.dimensions[1] * 0.5,
-        this.position[2],
-      ]);
-    }
-
-    this.scale(this.size);
-
-    if (fromCenter) {
-      this.translate([
-        this.dimensions[0] * -0.5,
-        this.dimensions[1] * -0.5,
-        this.position[2],
-      ]);
     }
   }
 
@@ -122,30 +71,31 @@ export default class Object3d {
     return false;
   }
 
-  transformLerp({ position, scale, origin }: TTransform) {
-    this.targetPosition = position || this.position;
-    this.targetSize = scale || this.size;
+  transform({ position, scale, origin }: TTransform) {
     this.origin = origin;
-  }
-
-  transformDefault({ position, scale, origin }: TTransform) {
-    const saveMatrix = origin === "center" && position;
+    const saveMatrix = this.origin === "center";
     this.modelViewMatrix = mat4.create();
 
-    this.targetPosition = position || this.position;
-    this.position = this.targetPosition;
+    this.position = position || this.position;
     this.translate(this.position);
 
     if (saveMatrix) {
-      this.translate([0.5, 0.5, position![2]]);
+      this.translate([
+        this.dimensions[0] * 0.5,
+        this.dimensions[1] * 0.5,
+        this.position[2],
+      ]);
     }
 
-    this.targetSize = scale || this.size;
-    this.size = this.targetSize;
+    this.size = scale || this.size;
     this.scale(this.size);
 
     if (saveMatrix) {
-      this.translate([-0.5, -0.5, position![2]]);
+      this.translate([
+        this.dimensions[0] * -0.5,
+        this.dimensions[1] * -0.5,
+        this.position[2],
+      ]);
     }
   }
 
@@ -167,19 +117,17 @@ export default class Object3d {
 
   setSize(size: Vec3) {
     this.size = size;
-    this.targetSize = size;
   }
 
   setPosition(position: Vec3) {
-    this.targetPosition = position;
     this.position = position;
   }
 
   setOpacity(opacity: number) {
-    this.targetOpacity = opacity;
+    this.opacity = opacity;
   }
 
-  getOpacity(value: number) {
+  getOpacity() {
     return this.opacity;
   }
 
