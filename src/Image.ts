@@ -8,6 +8,7 @@ type TImg = {
 
 type TImageDrawProps = {
   velocity: Vec2;
+  progress: number;
 };
 
 export default class Img extends Plane {
@@ -20,6 +21,27 @@ export default class Img extends Plane {
   constructor(props: TObject3dProps & TImg) {
     const planeProps = {
       ...props,
+      vert: `
+        precision mediump float;
+        attribute vec3 position;
+        attribute vec3 uv;
+    
+        uniform mat4 projection;
+        uniform mat4 view;
+        uniform float time;
+        uniform float progress;
+        uniform mat4 modelViewMatrix;
+
+        varying vec2 vUv;
+    
+        void main () {
+          vec3 pos = position;
+          // pos.x = pos.x + (sin(pos.y + time) * progress);
+          // pos.y = pos.y + (sin(pos.x + time) * progress);
+          gl_Position = projection * view * modelViewMatrix * vec4(pos, 1);
+          vUv = vec2(uv.x, uv.y);
+        }
+      `,
       frag: `
       precision mediump float;
 
@@ -54,6 +76,7 @@ export default class Img extends Plane {
         velocity: props.regl.prop("velocity"),
         resolution: props.regl.prop("resolution"),
         opacity: props.regl.prop("opacity"),
+        progress: props.regl.prop("progress"),
       },
     };
 
@@ -84,6 +107,7 @@ export default class Img extends Plane {
       velocity: props.velocity,
       resolution: this.resolution,
       opacity: this.opacity,
+      progress: props.progress,
     });
   }
 }

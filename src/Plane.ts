@@ -11,6 +11,8 @@ export default class Plane extends Object3d {
       z: this.position[2],
       width: this.dimensions[0],
       height: this.dimensions[1],
+      subX: 100,
+      subY: 100,
     });
 
     this.setSize(props.scale || [1, 1, 1]);

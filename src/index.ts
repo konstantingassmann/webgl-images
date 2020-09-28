@@ -39,6 +39,8 @@ const fromState = (id: string) => {
   return state[idx];
 };
 
+let progress = 0;
+
 Promise.all(
   Array.from(document.querySelectorAll("img")).map((img) => {
     return new Promise<HTMLImageElement>((resolve) => {
@@ -114,6 +116,7 @@ Promise.all(
       scaleX: objSize[0],
       scaleY: objSize[1],
       scaleZ: objSize[2],
+      progress: 1,
     };
 
     const tl = anime.timeline();
@@ -132,7 +135,6 @@ Promise.all(
           obj.setZoom(tlprops.zoom);
           obj.transform({
             scale: [tlprops.scaleX, tlprops.scaleY, tlprops.scaleZ],
-            origin: "center",
             position: newPos,
           });
         },
@@ -150,6 +152,11 @@ Promise.all(
     } else {
       const dims = obj.getDimensions();
 
+      const zero = toClipspace([0, 0], [window.innerWidth, window.innerHeight]);
+
+      newPos[0] = -20;
+      newPos[1] = -20;
+
       tl.add({
         targets: tlprops,
         opacity: 0,
@@ -165,13 +172,14 @@ Promise.all(
           scaleX: size[1] / dims[1],
           scaleY: size[1] / dims[1],
           scaleZ: 1,
+          progress: 0,
           easing: "easeOutQuad",
           duration: 300,
           update: () => {
+            progress = tlprops.progress;
             obj.setZoom(tlprops.zoom);
             obj.transform({
               scale: [tlprops.scaleX, tlprops.scaleY, tlprops.scaleZ],
-              origin: "center",
               position: newPos,
             });
           },
@@ -252,5 +260,11 @@ regl.frame(({ time }: { time: number }) => {
     depth: 1,
   });
 
-  world.draw({ projection, view, time, velocity: velocity.value });
+  world.draw({
+    projection,
+    view,
+    time,
+    velocity: velocity.value,
+    progress: progress,
+  });
 });
