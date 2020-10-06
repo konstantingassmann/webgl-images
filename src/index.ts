@@ -17,7 +17,7 @@ canvas.style.width = `${window.innerWidth}px`;
 
 const gl = canvas.getContext("webgl") as WebGLRenderingContext;
 
-const camera = new Camera(gl, [0, 0, -50]);
+const camera = new Camera(gl, { x: 0, y: 0, z: -50 });
 
 const regl = reglLib(gl);
 gl.enable(gl.CULL_FACE);
@@ -28,7 +28,7 @@ gl.disable(gl.DEPTH_TEST);
 
 const world = new Scene();
 
-let state: Array<{ id: string; open: boolean }> = [];
+let state: Array<{ id: string; open: boolean; position?: Vec3 }> = [];
 
 const getIdx = (id: string) => {
   return state.findIndex((s) => s.id === id);
@@ -85,7 +85,7 @@ Promise.all(
   });
 
   const { size } = camera.unproject({
-    size: [gl.canvas.width, gl.canvas.height, 1],
+    size: { x: gl.canvas.width, y: gl.canvas.height, z: 1 },
   });
 
   world.on("click", (obj: Img) => {
@@ -104,7 +104,7 @@ Promise.all(
 
     const idx = getIdx(obj.id);
 
-    const newPos: Vec3 = [...obj.getPosition()];
+    const currentPosition: Vec3 = { ...obj.getPosition() };
 
     const objSize = obj.getSize();
 
@@ -113,15 +113,18 @@ Promise.all(
     const tlprops = {
       zoom: obj.getZoom(),
       opacity: 1,
-      scaleX: objSize[0],
-      scaleY: objSize[1],
-      scaleZ: objSize[2],
-      progress: 1,
+      scaleX: objSize.x,
+      scaleY: objSize.y,
+      scaleZ: objSize.z,
+      progress: 0,
+      x: currentPosition.x,
+      y: currentPosition.y,
     };
 
     const tl = anime.timeline();
 
     if (open) {
+      const newPosition = state[idx].position || { x: 0, y: 0, z: 0 };
       tlprops.opacity = 0;
       tl.add({
         targets: tlprops,
@@ -131,11 +134,13 @@ Promise.all(
         scaleZ: 1,
         easing: "easeOutQuad",
         duration: 300,
+        x: newPosition.x || 0,
+        y: newPosition.y || 0,
         update: () => {
           obj.setZoom(tlprops.zoom);
           obj.transform({
-            scale: [tlprops.scaleX, tlprops.scaleY, tlprops.scaleZ],
-            position: newPos,
+            scale: { x: tlprops.scaleX, y: tlprops.scaleY, z: tlprops.scaleZ },
+            position: { x: tlprops.x, y: tlprops.y, z: 0 },
           });
         },
       }).add({
@@ -152,10 +157,9 @@ Promise.all(
     } else {
       const dims = obj.getDimensions();
 
-      const zero = toClipspace([0, 0], [window.innerWidth, window.innerHeight]);
-
-      newPos[0] = -20;
-      newPos[1] = -20;
+      const projectedZero = camera.unproject({
+        position: { x: 0, y: 0, z: 0 },
+      }).position;
 
       tl.add({
         targets: tlprops,
@@ -165,73 +169,91 @@ Promise.all(
         update: () => {
           childs.forEach((child) => child.setOpacity(tlprops.opacity));
         },
-      }).add(
-        {
-          targets: tlprops,
-          zoom: 1,
-          scaleX: size[1] / dims[1],
-          scaleY: size[1] / dims[1],
-          scaleZ: 1,
-          progress: 0,
-          easing: "easeOutQuad",
-          duration: 300,
-          update: () => {
-            progress = tlprops.progress;
-            obj.setZoom(tlprops.zoom);
-            obj.transform({
-              scale: [tlprops.scaleX, tlprops.scaleY, tlprops.scaleZ],
-              position: newPos,
-            });
+      })
+        .add(
+          {
+            targets: tlprops,
+            zoom: 1,
+            scaleX: size.y / dims.y,
+            scaleY: size.y / dims.y,
+            scaleZ: 1,
+            easing: "easeOutQuad",
+            duration: 300,
+            x: projectedZero.x + cameraPosition.x,
+            y: projectedZero.y + cameraPosition.y,
+            update: () => {
+              obj.setZoom(tlprops.zoom);
+              obj.transform({
+                scale: {
+                  x: tlprops.scaleX,
+                  y: tlprops.scaleY,
+                  z: tlprops.scaleZ,
+                },
+                position: { x: tlprops.x, y: tlprops.y, z: 0 },
+              });
+            },
           },
-        },
-        "-=100"
-      );
+          "-=100"
+        )
+        .add(
+          {
+            targets: tlprops,
+            duration: 3000,
+            progress: 1,
+            easing: "linear",
+            update: () => {
+              progress = tlprops.progress;
+            },
+          },
+          "-=1400"
+        );
 
       open = true;
     }
     state[idx].open = open;
+    state[idx].position = currentPosition;
   });
 });
 
 let dragging = false;
-let mouse = [0, 0];
-let cursor: Vec3 = [0, 0, 0];
-let dragOffset: Vec3 = [0, 0, -50];
-let cameraPosition: Vec3 = [0, 0, -50];
-let lastMouse = [0, 0];
-const velocity = smoothValue<Vec2>([0, 0], 0.1);
+let mouse: Vec2 = { x: 0, y: 0 };
+let cursor: Vec3 = { x: 0, y: 0, z: 0 };
+let dragOffset: Vec3 = { x: 0, y: 0, z: -50 };
+let cameraPosition: Vec3 = { x: 0, y: 0, z: -50 };
+let lastMouse: Vec2 = { x: 0, y: 0 };
+const velocity = smoothValue<Array<number>>([0, 0], 0.1);
 
 world.on("mousedown", (e) => {
   dragging = true;
   mouse = toClipspace(
-    [e.clientX, e.clientY],
-    [window.innerWidth, window.innerHeight]
+    { x: e.clientX, y: e.clientY },
+    { x: window.innerWidth, y: window.innerHeight }
   );
   lastMouse = mouse;
 });
 
 world.on("mousemove", (e) => {
   const projectedMouse = camera.unproject({
-    position: [e.clientX * dpr, e.clientY * dpr, 0],
+    position: { x: e.clientX * dpr, y: e.clientY * dpr, z: 0 },
   }).position;
 
-  cursor = [
-    projectedMouse[0] + cameraPosition[0],
-    projectedMouse[1] + cameraPosition[1],
-    projectedMouse[2],
-  ];
+  cursor = {
+    x: projectedMouse.x + cameraPosition.x,
+    y: projectedMouse.y + cameraPosition.y,
+    z: projectedMouse.z,
+  };
 
   if (dragging) {
     const m = toClipspace(
-      [e.clientX, e.clientY],
-      [window.innerWidth, window.innerHeight]
+      { x: e.clientX, y: e.clientY },
+      { x: window.innerWidth, y: window.innerHeight }
     );
 
-    dragOffset = [
-      dragOffset[0] - (m[0] - mouse[0]) * 20,
-      dragOffset[1] - (m[1] - mouse[1]) * 20,
-      -50,
-    ];
+    dragOffset = {
+      x: dragOffset.x - (m.x - mouse.x) * 20,
+      y: dragOffset.y - (m.y - mouse.y) * 20,
+      z: -50,
+    };
 
     lastMouse = mouse;
     mouse = m;
@@ -244,11 +266,11 @@ world.on("mouseup", () => {
 
 regl.frame(({ time }: { time: number }) => {
   cameraPosition = lerp3(cameraPosition, dragOffset, 0.1);
-  velocity.value = [lastMouse[0] - mouse[0], lastMouse[1] - mouse[1]];
+  velocity.value = [lastMouse.x - mouse.x, lastMouse.y - mouse.y];
   velocity.update();
 
   camera.setPosition(cameraPosition);
-  camera.lookAt([cameraPosition[0], cameraPosition[1], 0]);
+  camera.lookAt({ x: cameraPosition.x, y: cameraPosition.y, z: 0 });
 
   const { projection, view } = camera.project();
   document.body.style.cursor = dragging ? "grabbing" : "grab";

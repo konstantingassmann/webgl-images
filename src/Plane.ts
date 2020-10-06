@@ -6,17 +6,14 @@ export default class Plane extends Object3d {
     super(props);
 
     const [pos, uv] = plane({
-      x: this.position[0],
-      y: this.position[1],
-      z: this.position[2],
-      width: this.dimensions[0],
-      height: this.dimensions[1],
-      subX: 100,
-      subY: 100,
+      width: this.dimensions.x,
+      height: this.dimensions.y,
+      subX: 32,
+      subY: 32,
     });
 
-    this.setSize(props.scale || [1, 1, 1]);
-    this.setPosition(props.position || [0, 0, 0]);
+    this.setSize(props.scale || { x: 1, y: 1, z: 1 });
+    this.setPosition(props.position || { x: 0, y: 0, z: 0 });
     this.transform({});
 
     this.drawFunc = props.regl({

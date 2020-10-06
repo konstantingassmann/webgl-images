@@ -1,6 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
 import { Vec3, Vec2 } from "./types";
 import { v4 as uuidv4 } from "uuid";
+import { vecToArray } from "./utils";
 
 export type TViewProps = {
   projection: mat4;
@@ -28,11 +29,11 @@ export default class Object3d {
 
   protected origin: string | undefined;
 
-  protected position: Vec3 = [0, 0, 0];
+  public position: Vec3 = { x: 0, y: 0, z: 0 };
 
-  protected size: Vec3 = [1, 1, 1];
+  public size: Vec3 = { x: 1, y: 1, z: 1 };
 
-  protected dimensions: Vec2 = [1, 1];
+  protected dimensions: Vec2 = { x: 1, y: 1 };
 
   protected opacity = 1;
 
@@ -60,10 +61,10 @@ export default class Object3d {
     const scaling = mat4.getScaling(vec3.create(), this.modelViewMatrix);
 
     if (
-      point[1] >= translation[1] &&
-      point[1] <= translation[1] + this.dimensions[1] * scaling[1] &&
-      point[0] >= translation[0] &&
-      point[0] <= translation[0] + this.dimensions[0] * scaling[0]
+      point.y >= translation[1] &&
+      point.y <= translation[1] + this.dimensions.y * scaling[1] &&
+      point.x >= translation[0] &&
+      point.x <= translation[0] + this.dimensions.x * scaling[0]
     ) {
       return true;
     }
@@ -80,22 +81,22 @@ export default class Object3d {
     this.translate(this.position);
 
     if (saveMatrix) {
-      this.translate([
-        this.dimensions[0] * 0.5,
-        this.dimensions[1] * 0.5,
-        this.position[2],
-      ]);
+      this.translate({
+        x: this.dimensions.x * 0.5,
+        y: this.dimensions.y * 0.5,
+        z: this.position.z,
+      });
     }
 
     this.size = scale || this.size;
     this.scale(this.size);
 
     if (saveMatrix) {
-      this.translate([
-        this.dimensions[0] * -0.5,
-        this.dimensions[1] * -0.5,
-        this.position[2],
-      ]);
+      this.translate({
+        x: this.dimensions.x * -0.5,
+        y: this.dimensions.y * -0.5,
+        z: this.position.z,
+      });
     }
   }
 
@@ -103,7 +104,7 @@ export default class Object3d {
     this.modelViewMatrix = mat4.scale(
       mat4.create(),
       this.modelViewMatrix,
-      size
+      vecToArray(size)
     );
   }
 
@@ -111,7 +112,7 @@ export default class Object3d {
     this.modelViewMatrix = mat4.translate(
       mat4.create(),
       this.modelViewMatrix,
-      position
+      vecToArray(position)
     );
   }
 

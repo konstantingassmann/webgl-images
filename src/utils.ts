@@ -5,19 +5,34 @@ import Img from "./Image";
 const lerp = require("lerp");
 
 export const lerp3 = (from: Vec3, to: Vec3, time: number): Vec3 => {
-  return [
-    lerp(from[0], to[0], time),
-    lerp(from[1], to[1], time),
-    lerp(from[2], to[2], time),
-  ];
+  return {
+    x: lerp(from.x, to.x, time),
+    y: lerp(from.y, to.y, time),
+    z: lerp(from.z, to.z, time),
+  };
+};
+
+export const vecToArray = (vector: Vec3 | Vec2): Float32Array => {
+  const arr = [vector.x, vector.y];
+
+  if ((vector as Vec3).z !== undefined) {
+    arr[2] = (vector as Vec3).z;
+  }
+  return new Float32Array(arr);
 };
 
 export const lerp2 = (from: Vec2, to: Vec2, time: number): Vec2 => {
-  return [lerp(from[0], to[0], time), lerp(from[1], to[1], time)];
+  return {
+    x: lerp(from.x, to.x, time),
+    y: lerp(from.y, to.y, time),
+  };
 };
 
 export const toClipspace = (pos: Vec2, resolution: Vec2): Vec2 => {
-  return [(pos[0] / resolution[0]) * 2 - 1, (pos[1] / resolution[1]) * 2 - 1];
+  return {
+    x: (pos.x / resolution.x) * 2 - 1,
+    y: (pos.y / resolution.y) * 2 - 1,
+  };
 };
 
 export const createWebglImg = (
@@ -30,14 +45,14 @@ export const createWebglImg = (
   const bbox = img.getBoundingClientRect();
 
   const { position, size } = camera.unproject({
-    position: [bbox.x * dpr, bbox.y * dpr, 0],
-    size: [bbox.width * dpr, bbox.height * dpr, 1],
+    position: { x: bbox.x * dpr, y: bbox.y * dpr, z: 0 },
+    size: { x: bbox.width * dpr, y: bbox.height * dpr, z: 1 },
   });
 
   const image = new Img({
     regl,
     position,
-    dimensions: [size[0], size[1]],
+    dimensions: { x: Math.floor(size.x), y: Math.floor(size.y) },
     src: img,
   });
 

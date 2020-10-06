@@ -1,12 +1,13 @@
 import { mat4 } from "gl-matrix";
+import { vecToArray } from "./utils";
 import { Vec3 } from "./types";
 
 export default class Camera {
   private gl: WebGLRenderingContext;
-  private position: Vec3 = [0, 0, 0];
+  private position: Vec3 = { x: 0, y: 0, z: 0 };
   private fov = Math.PI / 4;
-  private up: Vec3 = [0, -1, 0];
-  private target: Vec3 = [0, 0, 0];
+  private up: Vec3 = { x: 0, y: -1, z: 0 };
+  private target: Vec3 = { x: 0, y: 0, z: 0 };
   private viewAspect = 0;
 
   constructor(gl: WebGLRenderingContext, position?: Vec3) {
@@ -26,7 +27,7 @@ export default class Camera {
   }
 
   getViewSize(): [number, number] {
-    const height = Math.abs(this.position[2] * Math.tan(Math.PI / 4 / 2) * 2);
+    const height = Math.abs(this.position.z * Math.tan(Math.PI / 4 / 2) * 2);
     return [height * this.viewAspect, height];
   }
 
@@ -39,22 +40,26 @@ export default class Camera {
   }): { position: Vec3; size: Vec3 } {
     const viewSize = this.getViewSize();
 
-    let scale: Vec3 = [1, 1, 1];
-    let pos: Vec3 = [0, 0, 0];
+    let scale: Vec3 = { x: 1, y: 1, z: 1 };
+    let pos: Vec3 = { x: 0, y: 0, z: 0 };
 
     if (size) {
-      scale = [
-        (size[0] * viewSize[0]) / this.gl.canvas.width,
-        (size[1] * viewSize[1]) / this.gl.canvas.height,
-        size[2],
-      ];
+      scale = {
+        x: (size.x * viewSize[0]) / this.gl.canvas.width,
+        y: (size.y * viewSize[1]) / this.gl.canvas.height,
+        z: size.z,
+      };
     }
 
     if (position) {
-      let x = (position[0] * viewSize[0]) / this.gl.canvas.width;
-      let y = (position[1] * viewSize[1]) / this.gl.canvas.height;
+      let x = (position.x * viewSize[0]) / this.gl.canvas.width;
+      let y = (position.y * viewSize[1]) / this.gl.canvas.height;
 
-      pos = [x - viewSize[0] / 2, y - viewSize[1] / 2, position[2]];
+      pos = {
+        x: x - viewSize[0] / 2,
+        y: y - viewSize[1] / 2,
+        z: position.z,
+      };
     }
 
     return {
@@ -66,9 +71,9 @@ export default class Camera {
   project() {
     const view = mat4.lookAt(
       mat4.create(),
-      this.position,
-      this.target,
-      this.up
+      vecToArray(this.position),
+      vecToArray(this.target),
+      vecToArray(this.up)
     );
 
     const projection = mat4.perspective(

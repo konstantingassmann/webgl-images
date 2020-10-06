@@ -16,7 +16,7 @@ export default class Img extends Plane {
   private aspect: number;
 
   private zoom: number;
-  private resolution: Vec2;
+  private resolution: Array<number>;
 
   constructor(props: TObject3dProps & TImg) {
     const planeProps = {
@@ -36,8 +36,10 @@ export default class Img extends Plane {
     
         void main () {
           vec3 pos = position;
-          // pos.x = pos.x + (sin(pos.y + time) * progress);
-          // pos.y = pos.y + (sin(pos.x + time) * progress);
+          float start = 0.5;
+          float startAt = (uv.x-uv.y+1.)/2. * start;
+          float vprog = smoothstep(startAt, 1., progress);
+          pos.y = pos.y + sin(vprog * 20.);
           gl_Position = projection * view * modelViewMatrix * vec4(pos, 1);
           vUv = vec2(uv.x, uv.y);
         }
@@ -60,7 +62,7 @@ export default class Img extends Plane {
       }
 
       void main () {
-        vec2 aspectUv = vec2(vUv.x + velocity.x, vUv.y * aspect + velocity.y);
+        vec2 aspectUv = vec2(vUv.x + velocity.x * 2., vUv.y * aspect + velocity.y * 2.);
         aspectUv -= vec2(0.5);
         aspectUv = aspectUv * scale(vec2(zoom));
         aspectUv += vec2(0.5);
