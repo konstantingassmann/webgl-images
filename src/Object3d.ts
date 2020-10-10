@@ -50,6 +50,8 @@ export default class Object3d {
     if (props && props.dimensions) {
       this.dimensions = props.dimensions;
     }
+
+    this.calcModelViewMatrix();
   }
 
   collides(point: Vec3) {
@@ -72,12 +74,11 @@ export default class Object3d {
     return false;
   }
 
-  transform({ position, scale, origin }: TTransform) {
-    this.origin = origin;
+  calcModelViewMatrix() {
     const saveMatrix = this.origin === "center";
     this.modelViewMatrix = mat4.create();
 
-    this.position = position || this.position;
+    this.position = this.position;
     this.translate(this.position);
 
     if (saveMatrix) {
@@ -88,7 +89,7 @@ export default class Object3d {
       });
     }
 
-    this.size = scale || this.size;
+    this.size = this.size;
     this.scale(this.size);
 
     if (saveMatrix) {
@@ -173,6 +174,7 @@ export default class Object3d {
     }
 
     this.updateFunctions.forEach((f) => f());
+    this.calcModelViewMatrix();
   }
 
   draw(props: TViewProps) {

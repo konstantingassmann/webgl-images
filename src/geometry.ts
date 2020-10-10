@@ -13,16 +13,21 @@ const quad = (x: number, y: number, width: number, height: number) => {
 };
 
 export const plane = ({ width, height, subX = 1, subY = 1 }: TPlane) => {
-  const stepX = width / subX;
-  const stepY = height / subY;
+  const quadWidth = width / subX;
+  const quadHeight = height / subY;
 
   const positions = [];
   const uv = [];
 
-  for (let j = 0; j < height; j += stepY) {
-    for (let i = 0; i < width; i += stepX) {
-      positions.push(...quad(i, j, stepX, stepY));
-      uv.push(...quad(i / width, j / height, stepX / width, stepY / height));
+  for (let y = 0; y < subY; y++) {
+    for (let x = 0; x < subX; x++) {
+      positions.push(
+        ...quad(x * quadWidth, y * quadHeight, quadWidth, quadHeight)
+      );
+
+      uv.push(
+        ...quad(x / subX, y / subY, quadWidth / width, quadHeight / height)
+      );
     }
   }
 

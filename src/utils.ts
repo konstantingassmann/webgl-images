@@ -1,5 +1,5 @@
 import { Vec2, Vec3 } from "./types";
-import Camera from "./cam";
+import Camera from "./camera";
 import Img from "./Image";
 
 const lerp = require("lerp");
@@ -41,18 +41,25 @@ export const createWebglImg = (
   dpr: number,
   regl: any
 ) => {
-  img.style.opacity = "0";
+  //img.style.opacity = "0";
   const bbox = img.getBoundingClientRect();
 
   const { position, size } = camera.unproject({
     position: { x: bbox.x * dpr, y: bbox.y * dpr, z: 0 },
-    size: { x: bbox.width * dpr, y: bbox.height * dpr, z: 1 },
+    size: {
+      x: bbox.width * dpr,
+      y: bbox.height * dpr,
+      z: 1,
+    },
   });
 
   const image = new Img({
     regl,
     position,
-    dimensions: { x: Math.floor(size.x), y: Math.floor(size.y) },
+    dimensions: {
+      x: size.x,
+      y: size.y,
+    },
     src: img,
   });
 
